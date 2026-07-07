@@ -49,7 +49,6 @@ namespace ExamTwo.Controllers
                     return BadRequest("Dinero insuficiente ");
                 }
 
-
                 foreach (var cafe in request.Order)
                 {
                     var selected = _db.keyValues.First(c => c.Key == cafe.Key).Key;
@@ -90,6 +89,17 @@ namespace ExamTwo.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        private bool IsEmptyOrder([FromBody] OrderRequest request) 
+        {
+            return request.Order == null || request.Order.Count == 0;
+        }
+
+        private bool HasEnoughMoney([FromBody] OrderRequest request)
+        {
+            return request.Payment.TotalAmount <= 0;
+        }
+        
     }
 
     public class OrderRequest
