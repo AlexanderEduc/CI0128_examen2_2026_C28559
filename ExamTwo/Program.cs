@@ -1,4 +1,7 @@
 using ExamTwo.Controllers;
+using ExamTwo.Interfaces;
+using ExamTwo.Repositories;
+using ExamTwo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +15,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<Database>();
 
 var app = builder.Build();
+
+builder.Services.AddInterfaces<ICoffeeMachineService(), ICoffeeMachineRepository()>;
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
