@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ../Models/CoffeeMachineModel;
 
 namespace ExamTwo.Controllers
 {
@@ -34,22 +35,24 @@ namespace ExamTwo.Controllers
         [HttpPost("buyCoffee")]
         public ActionResult<string> BuyCoffee([FromBody] OrderRequest request)
         {
-            if (request.Order == null || request.Order.Count == 0)
+            if (IsEmptyOrder(request))
                 return BadRequest("Ordem vacia.");
 
-            if (request.Payment.TotalAmount <= 0)
+            if (HasEnoughMoney(request))
                 return BadRequest("Dinero insuficiente ");
 
             try
-            {
-                var costoTotal = request.Order.Sum(o => _db.keyValues2.First(c => c.Key == o.Key).Value * o.Value);
+            {   
+                var requestOrder = request.Order;
+                var requestPaymentTotalAmount = request.Payment.Amount;
+                var costoTotal = requestOrder.Sum(o => _db.keyValues2.First(c => c.Key == o.Key).Value * o.Value);
 
-                if (request.Payment.TotalAmount < costoTotal)
+                if (requestPaymentTotalAmount < costoTotal)
                 { 
                     return BadRequest("Dinero insuficiente ");
                 }
 
-                foreach (var cafe in request.Order)
+                foreach (var cafe in requestOrder)
                 {
                     var selected = _db.keyValues.First(c => c.Key == cafe.Key).Key;
                     if (cafe.Value > _db.keyValues[selected])
@@ -59,7 +62,7 @@ namespace ExamTwo.Controllers
                     _db.keyValues[selected] -= cafe.Value;
                 }
 
-                var change = request.Payment.TotalAmount - costoTotal;
+                var change = requestPaymentTotalAmount - costoTotal;
                 String result = $"Su vuelto es de: {change} colones. Desglose:";
 
                 foreach (var coin in _db.keyValues3.Keys.OrderByDescending(c => c))
@@ -71,7 +74,6 @@ namespace ExamTwo.Controllers
                         change -= coin * count;
                     }
                 }
-
 
                 if (change > 0)
                 {
@@ -100,18 +102,5 @@ namespace ExamTwo.Controllers
             return request.Payment.TotalAmount <= 0;
         }
         
-    }
-
-    public class OrderRequest
-    {
-        public Dictionary<string, int> Order { get; set; }
-        public Payment Payment { get; set; }
-    }
-
-    public class Payment
-    {
-        public int TotalAmount { get; set; }
-        public List<int> Coins { get; set; }
-        public List<int> Bills { get; set; }
     }
 }
